@@ -38,7 +38,7 @@ function getProducts() {
         }); 
         startBamazon();  
     });
-  }//END of getProducts();
+}//END of getProducts();
   
 //This function starts the bamazon purchase  
 function startBamazon() {
@@ -154,7 +154,7 @@ function confirmPurchase(itemAbove, answer2) {
                 getProducts();
             }
         });   
-};
+};//END of confirmPurchase();
 
 //This function handles the start and end to the bamazon experience
 function startOver() {
