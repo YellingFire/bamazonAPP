@@ -4,7 +4,7 @@
 
 ## Overview (Minimum Requirement)
 
-Once the bamazonAPP is started with *node bamazonCustomer.js*" in the command line you will embark on a shopping experience. A full list of available products will be shown. Follow the prompts through the shopping experience you can purchase an item or 10 and the bamazon user guide will be with you every step of the way.
+Once the bamazonAPP is started with *node bamazonCustomer.js* in the command line, you will embark on a shopping experience. A full list of available products will be shown. Following the prompts through the shopping experience you can purchase an item or 10 and the bamazon user guide will be with you every step of the way.
 
 ## Details
 
