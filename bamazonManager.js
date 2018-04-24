@@ -39,7 +39,8 @@ function runManager() {
     .then(function(answer) {
         switch (answer.action) {
             case "View Products for sale":
-            viewProducts();
+            viewProducts(runManager);
+            // runManager();
             break;
 
             case "View Low Inventory":
