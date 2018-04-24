@@ -21,6 +21,7 @@ connection.connect(function(err) {
   runManager();
 });
 
+//Function for runManager();
 function runManager() {
     inquirer
     .prompt({
@@ -31,7 +32,8 @@ function runManager() {
             "View Products for sale",
             "View Low Inventory",
             "Add Inventory",
-            "Add New Product"
+            "Add New Product",
+            "End Manager Session"
         ]
     })
     .then(function(answer) {
@@ -44,20 +46,23 @@ function runManager() {
             lowInven();
             break;
 
-            case "Add Inventory":
-            //Function to addInventory();
+            case "Add Inventory":            
             addInventory();
             break;
 
             case "Add New Product":
+            newProduct();
             break;
-            //Function newProduct();
+
+            case "End Manager Session":
+            endSession();
+            break;
         }
     })
 }//END of runManager();
 
 //Function for viewProducts();
-function viewProducts() {
+function viewProducts(callback) {
     connection.query("SELECT * FROM products", function(err, res) {
         if (err) throw err;
       res.map(info => {
@@ -70,7 +75,8 @@ function viewProducts() {
           };
           let displayInfo = "id# " + productInfo.id + " Product: " + productInfo.Product_name + " Price: " + productInfo.Price;
           console.log(displayInfo);
-          });  
+          });
+          callback();
       });
 };//END of viewProducts();
 
@@ -97,98 +103,122 @@ function lowInven() {
 
 //Function to addInventory();
 function addInventory() {
-    viewProducts();
-    inquirer
-    .prompt({
-        name: "id",
-        type: "input",
-        message: "Please enter the item number of the product you would like increase inventory."
-    })
-    .then(function(answer) {
-        let query = "SELECT * FROM products WHERE ?";
-        connection.query(query, {id: answer.id} , function(err, res) {
-            if (err) throw err;
-            res.map(info => {
-                let productInfo = {
-                    id: info.id,
-                    Product_name: info.product_name,
-                    Department: info.department_name,
-                    Price: "$" + info.price,
-                    Stock_quantity: info.stock_quantity
-                };
-                let displayInfo = "Product: " + " " + productInfo.Product_name + " Current Stock: " + productInfo.Stock_quantity;
-                console.log(displayInfo);
-                inquirer
-                    .prompt({
-                        name: "item",
-                        type: "input",
-                        message: "How many would you like to add?"
-                    })
-                    .then(function(answer2) {
-                        let itemQuant = answer2.item;
-                        let chosProductStock = productInfo.Stock_quantity;
-                        let newStock = parseInt(chosProductStock) + parseInt(itemQuant);
-                        let item = productInfo.id;
-                            // console.log(newStock);
-                            // console.log("This is the current product stock " + productInfo.Stock_quantity);
-                            let stockQuery = connection.query(
-                                "UPDATE products SET ? WHERE ?", 
-                                [
-                                    {
-                                        stock_quantity: newStock
-                                    },
-                                    { 
-                                        id: item
-                                    }
-                                ],
-                                function(err, res) {
-                                    if (err) throw err;
-                                    console.log("The stock for " + productInfo.Product_name + " has been updated to: " + newStock);
-                                    runManager();
-                            
-                                 })
+    viewProducts(promptMe);
+    function promptMe() {
+        inquirer.prompt({
+            name: "id",
+            type: "input",
+            message: "Please enter the item number of the product you would like increase inventory."
+        })
+        .then(function(answer) {
+            let query = "SELECT * FROM products WHERE ?";
+            connection.query(query, {id: answer.id} , function(err, res) {
+                if (err) throw err;
+                res.map(info => {
+                    let productInfo = {
+                        id: info.id,
+                        Product_name: info.product_name,
+                        Department: info.department_name,
+                        Price: "$" + info.price,
+                        Stock_quantity: info.stock_quantity
+                    };
+                    let displayInfo = "Product: " + " " + productInfo.Product_name + " Current Stock: " + productInfo.Stock_quantity;
+                    console.log(displayInfo);
+                    inquirer
+                        .prompt({
+                            name: "item",
+                            type: "input",
+                            message: "How many would you like to add?"
                         })
-                });
-            });    
+                        .then(function(answer2) {
+                            let itemQuant = answer2.item;
+                            let chosProductStock = productInfo.Stock_quantity;
+                            let newStock = parseInt(chosProductStock) + parseInt(itemQuant);
+                            let item = productInfo.id;
+                               
+                                let stockQuery = connection.query(
+                                    "UPDATE products SET ? WHERE ?", 
+                                    [
+                                        {
+                                            stock_quantity: newStock
+                                        },
+                                        { 
+                                            id: item
+                                        }
+                                    ],
+                                    function(err, res) {
+                                        if (err) throw err;
+                                        console.log("The stock for " + productInfo.Product_name + " has been updated to: " + newStock);
+                                        runManager();
+                                
+                                    })
+                            })
+                        });
+                });    
 
-    });
+        });
+    }
+
 }//END of addInventory();
 
+//Function newProduct();
+function newProduct() {
+    console.log("Inserting a new product...\n");
+    inquirer.prompt([
+        {
+            name: "ProdName",
+            type: "input",
+            message: "What is the product name?"
+        },
 
- //Function newProduct();
- function newProduct() {
+        {
+            name: "depName",
+            type: "input",
+            message: "What department is this product from?"
+        },
 
+        {
+            name: "prodPrice",
+            type: "input",
+            message: "How much will this item cost?"
+        },
+        {
+            name: "prodStock",
+            type: "input",
+            message: "What is the total initial stock number?"
+        }
 
- };//END of newProduct();
+    ])
+    .then(function(answer){
+        let newProdName = String(answer.ProdName);
+        let newDepName = String(answer.depName);
+        let newProdPrice = answer.prodPrice;
+        let newProdStock = answer.prodStock;
+        // console.log(newProdName);
+        var newProdQuery = connection.query(
+                "INSERT INTO products SET ?",
+                {
+                product_name: newProdName,
+                department_name: newDepName,
+                price: newProdPrice,
+                stock_quantity: newProdStock
+                },
+                function(err, res) {
+                console.log(res.affectedRows + " product inserted!\n");
+                }
+            );
+        // console.log(`
+        // ${newProdName}
+        // ${newDepName}
+        // ${newProdPrice}
+        // ${newProdStock}
+        // `)
+        runManager(); 
+    })
+            
+};//END of newProduct();
 
-//  inquirer
-//                 .prompt({
-//                     name: "action",
-//                     type: "rawlist",
-//                     message: "Would you like to add inventory to one of these items?",
-//                     choices: [
-//                         "Yes",
-//                         "No"
-//                     ]
-//                 })
-//                 .then(function(answer) {
-//                     switch (answer.action) {
-//                         case "Yes":
-//                         inquirer
-//                             .prompt({
-//                                 name: "action",
-//                                 type: "rawlist",
-//                                 message: "Which Item would you like to add inventory to?",
-//                                 choices: [
-                                    
-//                                 ]
-//                         })
-//                         //Prompt with choices being display info.
-//                         break;
-
-//                         case "No":
-//                         runManager();
-//                         break;
-//                     };
-
-//                 })
+function endSession() {
+        console.log("This manager session is now closed")
+        connection.end();
+};//END endSession();
